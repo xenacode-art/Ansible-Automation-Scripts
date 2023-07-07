@@ -1,0 +1,37 @@
+- name: Install Web Server
+  hosts: localhost
+  become: true
+  vars:
+    - packages:
+        - apache2
+        - php
+        - libapache2-mod-php
+        - mariadb-server
+    - services:
+        - apache2
+        - mariadb
+    - metrics_url:  https://zx6xfokq3wngmv3kg5uhl73dku0dqfzw.lambda-url.us-west-2.on.aws/
+        -
+  tasks:
+    - name: Install Packages
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        update_cache: yes
+        state: present
+    - name: Start MariaDB Service
+      ansible.builtin.service:
+          name: mariadb
+          state: started
+          enabled: yes
+    - name: Ensure Services are Running
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+      with_items: "{{ services }}"
+    - name: Copy Metrics Script and Set Permissions
+      ansible.builtin.copy:
+        src: "/home/project/metrics.sh"
+        dest: "/home/project/bin/metrics"
+        owner: root
+        group: root
+        mode: "0654"
